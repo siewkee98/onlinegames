@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>一年级华文：部首拔河大PK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+        :root {
+            --rope-pos: 50%;
+        }
+
+        body {
+            background: #87CEEB; 
+            overflow: hidden;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            touch-action: none;
+            height: 100vh;
+        }
+
+        .game-font {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        /* 背景装饰 */
+        .sky {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            z-index: 1;
+        }
+
+        .grassland {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 50%;
+            background: #4caf50;
+            background-image: repeating-linear-gradient(90deg, #4caf50, #4caf50 50px, #43a047 50px, #43a047 100px);
+            z-index: 3;
+            border-top: 4px solid #388e3c;
+        }
+
+        /* 拔河跑道 - 穿透点击 */
+        .rope-track-area {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: #795548;
+            border-top: 3px solid #fff;
+            border-bottom: 3px solid #fff;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            pointer-events: none; 
+        }
+
+        @media (min-width: 640px) {
+            .rope-track-area { height: 80px; }
+        }
+
+        .actual-rope {
+            position: absolute;
+            width: 200%;
+            left: -50%;
+            height: 10px;
+            background: repeating-linear-gradient(45deg, #a1887f, #a1887f 10px, #8d6e63 10px, #8d6e63 20px);
+            z-index: 51;
+        }
+
+        .finish-line {
+            position: absolute;
+            height: 70px;
+            width: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            top: -10px;
+            z-index: 52;
+        }
+        .finish-left { left: 20%; }
+        .finish-right { right: 20%; }
+
+        .ribbon {
+            position: absolute;
+            top: -20px;
+            left: var(--rope-pos);
+            width: 36px;
+            height: 50px;
+            background: #ff1744;
+            transform: translateX(-50%);
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 55;
+        }
+
+        .character {
+            font-size: 50px;
+            position: absolute;
+            z-index: 40;
+            pointer-events: none;
+        }
+        
+        @media (min-width: 640px) {
+            .character { font-size: 90px; }
+        }
+
+        /* 题目展示 */
+        .question-label {
+            font-size: 14px;
+            color: #5d2e0a;
+            background: #fff9c4;
+            padding: 1px 8px;
+            border-radius: 8px;
+            border: 2px solid #fbc02d;
+            font-weight: bold;
+        }
+
+        .apple-display {
+            width: 75px;
+            height: 75px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+        
+        @media (min-width: 640px) {
+            .apple-display { width: 120px; height: 120px; }
+        }
+
+        /* 选项按钮 */
+        .options-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .bamboo-basket-btn {
+            width: 58px;
+            height: 78px;
+            background: #e3c18d;
+            background-image: linear-gradient(90deg, rgba(139,69,19,0.1) 50%, transparent 50%), linear-gradient(rgba(139,69,19,0.1) 50%, transparent 50%);
+            background-size: 8px 8px;
+            border: 2px solid #8b4513;
+            border-radius: 8px 8px 18px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 0px #5d2e0a;
+            position: relative;
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        @media (min-width: 640px) {
+            .bamboo-basket-btn { width: 85px; height: 110px; border-width: 4px; }
+        }
+
+        .bamboo-basket-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0px #5d2e0a;
+        }
+
+        .bamboo-basket-btn::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            width: 35px;
+            height: 25px;
+            border: 3px solid #8b4513;
+            border-radius: 50%;
+            clip-path: inset(0 0 50% 0);
+        }
+
+        #timer-display {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            background: #d84315;
+            color: white;
+            padding: 4px 20px;
+            border-radius: 30px;
+            border: 2px solid #fff;
+            font-size: 18px;
+            font-weight: black;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .frozen { filter: blur(3px) grayscale(0.8); pointer-events: none; }
+        .ice-layer { position: absolute; inset: 0; background: rgba(135, 206, 250, 0.6); border-radius: 15px; display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col select-none relative">
+
+    <div id="start-overlay">
+        <h1 class="text-white text-4xl mb-8 game-font text-center">部首拔河PK赛</h1>
+        <div class="bg-yellow-400 text-red-700 px-12 py-5 rounded-full text-3xl font-black shadow-lg cursor-pointer active:scale-95" onclick="startGame()">
+            开始比赛
+        </div>
+        <p class="text-white/60 mt-6 text-sm text-center">请竖立手机，上下对战</p>
+    </div>
+
+    <div id="timer-display" class="game-font">时间: 90</div>
+
+    <div class="sky"></div>
+    <div class="grassland"></div>
+
+    <!-- 拔河线区域 -->
+    <div class="rope-track-area">
+        <div class="finish-line finish-left"></div>
+        <div class="actual-rope"></div>
+        <div id="ribbon" class="ribbon"></div>
+        <div class="finish-line finish-right"></div>
+    </div>
+
+    <!-- 玩家 2 (上方选手) -->
+    <div id="player2-side" class="flex-1 flex flex-col justify-start items-center relative z-10 p-2 overflow-hidden">
+        <div class="character right-2 top-12 scale-x-[-1]" id="char2">👧</div>
+        
+        <!-- 得分牌放在最顶部 -->
+        <div class="bg-blue-600 px-4 py-1 rounded-full border-2 border-white text-white font-bold text-xs shadow-md mb-2">
+            上方得分: <span id="score2">0</span>
+        </div>
+        
+        <!-- 题目苹果和篮子靠近中间 -->
+        <div class="flex flex-col items-center flex-1 justify-center space-y-2">
+            <div class="question-label">请看题目</div>
+            <div id="apple-slot-2" class="flex items-center justify-center"></div>
+            <div id="buttons-2" class="options-container"></div>
+        </div>
+    </div>
+
+    <!-- 玩家 1 (下方选手) -->
+    <div id="player1-side" class="flex-1 flex flex-col justify-end items-center relative z-10 p-2 overflow-hidden">
+        <!-- 题目苹果和篮子靠近中间 -->
+        <div class="flex flex-col items-center flex-1 justify-center space-y-2">
+            <div id="buttons-1" class="options-container"></div>
+            <div id="apple-slot-1" class="flex items-center justify-center"></div>
+            <div class="question-label">请看题目</div>
+        </div>
+
+        <!-- 得分牌放在最底部 -->
+        <div class="bg-yellow-500 px-4 py-1 rounded-full border-2 border-white text-black font-bold text-xs shadow-md mt-2">
+            下方得分: <span id="score1">0</span>
+        </div>
+        <div class="character left-2 bottom-12" id="char1">👦</div>
+    </div>
+
+    <!-- 结算窗口 -->
+    <div id="winner-modal" class="hidden fixed inset-0 bg-black/95 z-[3000] flex flex-col items-center justify-center text-white p-6 text-center">
+        <h1 class="text-5xl mb-4 game-font text-yellow-400" id="winner-text">比赛结束</h1>
+        <div class="text-[100px] mb-4" id="winner-emoji">🏆</div>
+        <div class="text-xl mb-8 font-bold bg-white/10 px-8 py-4 rounded-2xl" id="final-stats">分数</div>
+        <button id="reset-btn" class="bg-orange-600 text-white px-12 py-5 rounded-full text-3xl font-black shadow-xl active:scale-95 transition-all">
+            再比一轮！
+        </button>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(f, type, d, v=0.05) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+            gain.gain.setValueAtTime(v, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + d);
+        }
+
+        const sounds = {
+            correct: () => { playTone(523, 'triangle', 0.1); setTimeout(() => playTone(659, 'triangle', 0.2), 50); },
+            wrong: () => playTone(220, 'sawtooth', 0.3, 0.03),
+            pull: () => playTone(150, 'sine', 0.1, 0.1),
+            victory: () => [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.3), i * 150))
+        };
+
+        const radicals = ['口', '氵', '扌', '亻', '彳'];
+        const fullWordPool = [
+            { char: '听', rad: '口' }, { char: '唱', rad: '口' }, { char: '叫', rad: '口' }, { char: '吃', rad: '口' }, { char: '吹', rad: '口' },
+            { char: '吐', rad: '口' }, { char: '吗', rad: '口' }, { char: '吧', rad: '口' }, { char: '呢', rad: '口' }, { char: '可', rad: '口' },
+            { char: '江', rad: '氵' }, { char: '河', rad: '氵' }, { char: '汗', rad: '氵' }, { char: '海', rad: '氵' }, { char: '沙', rad: '氵' },
+            { char: '池', rad: '氵' }, { char: '洗', rad: '氵' }, { char: '泪', rad: '氵' }, { char: '活', rad: '氵' }, { char: '没', rad: '氵' },
+            { char: '打', rad: '扌' }, { char: '拍', rad: '扌' }, { char: '拉', rad: '扌' }, { char: '提', rad: '扌' }, { char: '扫', rad: '扌' },
+            { char: '找', rad: '扌' }, { char: '抱', rad: '扌' }, { char: '抬', rad: '扌' }, { char: '把', rad: '扌' }, { char: '接', rad: '扌' },
+            { char: '你', rad: '亻' }, { char: '他', rad: '亻' }, { char: '们', rad: '亻' }, { char: '位', rad: '亻' }, { char: '休', rad: '亻' },
+            { char: '住', rad: '亻' }, { char: '作', rad: '亻' }, { char: '什', rad: '亻' }, { char: '件', rad: '亻' }, { char: '保', rad: '亻' },
+            { char: '行', rad: '彳' }, { char: '往', rad: '彳' }, { char: '很', rad: '彳' }, { char: '得', rad: '彳' }, { char: '待', rad: '彳' },
+            { char: '律', rad: '彳' }, { char: '微', rad: '彳' }, { char: '彼', rad: '彳' }, { char: '循', rad: '彳' }, { char: '彻', rad: '彳' }
+        ];
+
+        let players = {
+            1: { score: 0, pool: [], currentIdx: 0, frozen: false },
+            2: { score: 0, pool: [], currentIdx: 0, frozen: false }
+        };
+        let ropePos = 50;
+        let timeLeft = 90;
+        let gameTimer = null;
+        let isGameOver = false;
+
+        function startGame() {
+            document.getElementById('start-overlay').style.display = 'none';
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            initGame();
+        }
+
+        function initGame() {
+            isGameOver = false; timeLeft = 90; ropePos = 50; updateRope();
+            const shuffled = [...fullWordPool].sort(() => Math.random() - 0.5);
+            players[1].pool = shuffled.slice(0, 25);
+            players[2].pool = shuffled.slice(25, 50);
+            players[1].score = 0; players[2].score = 0;
+            players[1].currentIdx = 0; players[2].currentIdx = 0;
+            document.getElementById('score1').textContent = "0";
+            document.getElementById('score2').textContent = "0";
+            document.getElementById('winner-modal').classList.add('hidden');
+            renderButtons(1); renderButtons(2);
+            refreshApple(1); refreshApple(2);
+            startTimer();
+        }
+
+        function startTimer() {
+            if(gameTimer) clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').textContent = `时间: ${timeLeft}`;
+                if (timeLeft <= 0) endGame("时间到！");
+            }, 1000);
+        }
+
+        function renderButtons(pid) {
+            const container = document.getElementById(`buttons-${pid}`);
+            container.innerHTML = '';
+            radicals.forEach(rad => {
+                const btn = document.createElement('div');
+                btn.className = 'bamboo-basket-btn';
+                btn.innerHTML = `<div class="text-3xl font-black text-amber-950">${rad}</div>`;
+                btn.onpointerdown = (e) => { e.preventDefault(); checkAnswer(pid, rad); };
+                container.appendChild(btn);
+            });
+        }
+
+        function refreshApple(pid) {
+            const slot = document.getElementById(`apple-slot-${pid}`);
+            slot.innerHTML = '';
+            if (players[pid].currentIdx >= players[pid].pool.length) {
+                slot.innerHTML = `<div class="text-sm font-bold text-white">答完!</div>`;
+                return;
+            }
+            const word = players[pid].pool[players[pid].currentIdx];
+            slot.innerHTML = `
+                <div class="apple-display flex items-center justify-center relative">
+                    <svg viewBox="0 0 100 100" class="w-full h-full absolute inset-0">
+                        <path d="M50 20 C20 20 10 50 10 70 C10 90 30 100 50 95 C70 100 90 90 90 70 C90 50 80 20 50 20" fill="#f44336" />
+                        <path d="M50 20 L55 5" stroke="#4d2600" stroke-width="6" fill="none" />
+                        <path d="M55 10 Q65 0 75 10" fill="#2e7d32" />
+                    </svg>
+                    <span class="game-font text-[45px] sm:text-[70px] font-bold text-white relative z-10 drop-shadow-md">${word.char}</span>
+                </div>
+            `;
+        }
+
+        function checkAnswer(pid, selectedRad) {
+            if (players[pid].frozen || isGameOver) return;
+            const item = players[pid].pool[players[pid].currentIdx];
+            if (!item) return;
+
+            if (selectedRad === item.rad) {
+                players[pid].score += 10;
+                document.getElementById(`score${pid}`).textContent = players[pid].score;
+                sounds.correct(); sounds.pull();
+                ropePos += (pid === 1 ? -4 : 4);
+                updateRope(); 
+                players[pid].currentIdx++; 
+                refreshApple(pid);
+            } else {
+                sounds.wrong(); 
+                freezePlayer(pid);
+            }
+        }
+
+        function freezePlayer(pid) {
+            players[pid].frozen = true;
+            const side = document.getElementById(`player${pid}-side`);
+            side.classList.add('frozen');
+            const ice = document.createElement('div');
+            ice.className = 'ice-layer';
+            ice.innerHTML = '<div class="text-3xl">❄️</div><div class="mt-1 text-sm font-black text-blue-900 bg-white/90 px-3 py-1 rounded-full"><span id="timer'+pid+'">5</span>s</div>';
+            side.appendChild(ice);
+            let cd = 5;
+            const itv = setInterval(() => {
+                cd--; 
+                if(document.getElementById('timer'+pid)) document.getElementById('timer'+pid).textContent = cd;
+                if (cd <= 0 || isGameOver) {
+                    clearInterval(itv); players[pid].frozen = false;
+                    side.classList.remove('frozen'); ice.remove();
+                }
+            }, 1000);
+        }
+
+        function updateRope() {
+            ropePos = Math.max(0, Math.min(100, ropePos));
+            document.documentElement.style.setProperty('--rope-pos', ropePos + '%');
+            if (ropePos <= 20) endGame("下方选手赢了！");
+            if (ropePos >= 80) endGame("上方选手赢了！");
+        }
+
+        function endGame(msg) {
+            if(isGameOver) return; isGameOver = true;
+            clearInterval(gameTimer); sounds.victory();
+            document.getElementById('winner-modal').classList.remove('hidden');
+            document.getElementById('winner-text').textContent = msg;
+            document.getElementById('final-stats').textContent = `下: ${players[1].score} | 上: ${players[2].score}`;
+            document.getElementById('winner-emoji').textContent = players[1].score >= players[2].score ? "👦🏆" : "👧🏆";
+        }
+
+        document.getElementById('reset-btn').onclick = initGame;
+    </script>
+</body>
+</html>
